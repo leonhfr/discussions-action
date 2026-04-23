@@ -47,6 +47,7 @@ func (r Reddit) Fetch(ctx context.Context, domainName string, existing []discuss
 		req := r.restyClient.R().
 			SetContext(ctx).
 			SetResult(&resp).
+			SetHeader("User-Agent", "go:discussions-action:v1.0 (github.com/leonhfr/discussions-action)").
 			SetQueryParams(map[string]string{
 				"q":    "url:" + domainName,
 				"type": "link",
