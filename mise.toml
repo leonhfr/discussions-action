@@ -1,0 +1,24 @@
+[tools]
+go = "1.26"
+golangci-lint = "2.10.1"
+goreleaser = "2.15.4"
+
+[tasks.build]
+description = "Build the project"
+run = "goreleaser release --snapshot --clean"
+
+[tasks.test]
+description = "Run tests"
+run = "go test ./..."
+
+[tasks.lint]
+description = "Run linter"
+run = "golangci-lint run"
+
+[tasks.fmt]
+description = "Format code"
+run = "golangci-lint fmt"
+
+[tasks.local]
+description = "Run action locally against leonh.fr, output to dist/"
+run = "go run ./cmd/local"

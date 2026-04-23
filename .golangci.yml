@@ -1,0 +1,49 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - contextcheck
+    - errcheck
+    - errname
+    - errorlint
+    - exptostd
+    - godot
+    - gosec
+    - govet
+    - iface
+    - ineffassign
+    - makezero
+    - modernize
+    - nilerr
+    - nolintlint
+    - paralleltest
+    - perfsprint
+    - prealloc
+    - staticcheck
+    - testifylint
+    - thelper
+    - unconvert
+    - unparam
+    - unused
+  exclusions:
+    generated: lax
+    rules:
+      - linters:
+          - govet
+        path: (.+)_test.go
+
+formatters:
+  enable:
+    - gci
+    - gofumpt
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/leonhfr/discussions-action)
+    gofumpt:
+      extra-rules: true
+  exclusions:
+    generated: lax
