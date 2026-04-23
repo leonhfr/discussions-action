@@ -14,6 +14,10 @@ import (
 	"github.com/leonhfr/discussions-action/discussion"
 )
 
+type noopLogger struct{}
+
+func (noopLogger) Errorf(string, ...any) {}
+
 func newServer(t *testing.T, path string) *httptest.Server {
 	t.Helper()
 	path = filepath.Clean(path)
@@ -33,7 +37,7 @@ func TestFetch(t *testing.T) {
 	server := newServer(t, "testdata/response.json")
 	defer server.Close()
 
-	r := Reddit{restyClient: resty.New(), baseURL: server.URL}
+	r := Reddit{restyClient: resty.New(), baseURL: server.URL, logger: noopLogger{}}
 
 	got, err := r.Fetch(context.Background(), "leonh.fr", nil)
 	if err != nil {
@@ -65,7 +69,7 @@ func TestFetch_existingScorePreservedWhenHigher(t *testing.T) {
 	server := newServer(t, "testdata/response.json")
 	defer server.Close()
 
-	r := Reddit{restyClient: resty.New(), baseURL: server.URL}
+	r := Reddit{restyClient: resty.New(), baseURL: server.URL, logger: noopLogger{}}
 
 	sub := "r/golang"
 	existing := []discussion.Discussion{

@@ -10,6 +10,10 @@ import (
 	"github.com/leonhfr/discussions-action/discussion"
 )
 
+type Logger interface {
+	Errorf(format string, args ...any)
+}
+
 const (
 	baseURL   = "https://www.reddit.com/search.json"
 	redditURL = "https://www.reddit.com"
@@ -19,12 +23,14 @@ const (
 type Reddit struct {
 	restyClient *resty.Client
 	baseURL     string
+	logger      Logger
 }
 
-func New(restyClient *resty.Client) Reddit {
+func New(restyClient *resty.Client, logger Logger) Reddit {
 	return Reddit{
 		restyClient: restyClient,
 		baseURL:     baseURL,
+		logger:      logger,
 	}
 }
 
@@ -51,9 +57,12 @@ func (r Reddit) Fetch(ctx context.Context, domainName string, existing []discuss
 			req.SetQueryParam("after", *after)
 		}
 
-		_, err := req.Get(r.baseURL)
+		httpResp, err := req.Get(r.baseURL)
 		if err != nil {
 			return nil, err
+		}
+		if !httpResp.IsSuccess() {
+			r.logger.Errorf("reddit: unexpected status: %d", httpResp.StatusCode())
 		}
 
 		for _, child := range resp.Data.Children {

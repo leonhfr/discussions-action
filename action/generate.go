@@ -34,7 +34,7 @@ func Generate(ctx context.Context, logger Logger, domainName, targetDir string) 
 
 	fetchers := []discussion.Fetcher{
 		hackernews.New(restyClient),
-		reddit.New(restyClient),
+		reddit.New(restyClient, logger),
 	}
 
 	target := filepath.Join(targetDir, "discussions.toml")
