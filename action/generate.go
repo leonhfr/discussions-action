@@ -68,7 +68,7 @@ func Generate(ctx context.Context, logger Logger, domainName, targetDir string) 
 }
 
 type output struct {
-	Discussions []discussion.Discussion
+	Discussions []discussion.Discussion `toml:"discussions"`
 }
 
 func readOutput(path string) ([]discussion.Discussion, error) {
