@@ -91,6 +91,10 @@ func readOutput(path string) ([]discussion.Discussion, error) {
 
 func writeOutput(path string, discussions []discussion.Discussion) error {
 	path = filepath.Clean(path)
+	if err := os.MkdirAll(filepath.Dir(path), 0o750); err != nil {
+		return err
+	}
+
 	f, err := os.Create(path)
 	if err != nil {
 		return err
