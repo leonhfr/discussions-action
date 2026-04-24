@@ -3,9 +3,11 @@ package hackernews
 import (
 	"context"
 	"net/url"
+	"slices"
 	"strconv"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/samber/lo"
 
 	"github.com/leonhfr/discussions-action/discussion"
 )
@@ -29,7 +31,7 @@ func New(restyClient *resty.Client) HackerNews {
 
 func (HackerNews) String() string { return site }
 
-func (hn HackerNews) Fetch(ctx context.Context, domainName string, _ []discussion.Discussion) ([]discussion.Discussion, error) {
+func (hn HackerNews) Fetch(ctx context.Context, domainName string, existing []discussion.Discussion) ([]discussion.Discussion, error) {
 	var results []discussion.Discussion
 	numberOfPages := 1
 	for page := 0; page < numberOfPages; page++ {
@@ -48,14 +50,17 @@ func (hn HackerNews) Fetch(ctx context.Context, domainName string, _ []discussio
 			return nil, err
 		}
 
-		for _, hit := range resp.Hits {
-			results = append(results, hit.toDiscussion())
-		}
-
+		results = append(results, lo.Map(resp.Hits, hitToDiscussion)...)
 		numberOfPages = resp.NumberOfPages
 	}
 
-	return results, nil
+	return mergeWithExisting(results, existing), nil
+}
+
+func mergeWithExisting(fetched, existing []discussion.Discussion) []discussion.Discussion {
+	fetchedMap := lo.SliceToMap(fetched, func(d discussion.Discussion) (string, bool) { return d.URL, true })
+	existingFiltered := lo.Filter(existing, func(d discussion.Discussion, _ int) bool { return !fetchedMap[d.URL] })
+	return slices.Concat(fetched, existingFiltered)
 }
 
 type response struct {
@@ -72,7 +77,7 @@ type hit struct {
 	CreatedAt        int    `json:"created_at_i"`
 }
 
-func (h hit) toDiscussion() discussion.Discussion {
+func hitToDiscussion(h hit, _ int) discussion.Discussion {
 	blogRelURL := ""
 	if u, err := url.Parse(h.URL); err == nil {
 		blogRelURL = u.Path

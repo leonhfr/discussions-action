@@ -3,6 +3,7 @@ package reddit
 import (
 	"context"
 	"net/url"
+	"slices"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -39,8 +40,6 @@ func New(restyClient *resty.Client, logger Logger, apifyToken string) Reddit {
 func (Reddit) String() string { return site }
 
 func (r Reddit) Fetch(ctx context.Context, domainName string, existing []discussion.Discussion) ([]discussion.Discussion, error) {
-	existingByURL := lo.KeyBy(existing, func(d discussion.Discussion) string { return d.URL })
-
 	body := requestBody{
 		DebugMode:           false,
 		IgnoreStartUrls:     false,
@@ -85,16 +84,22 @@ func (r Reddit) Fetch(ctx context.Context, domainName string, existing []discuss
 		r.logger.Errorf("reddit: unexpected status: %d", httpResp.StatusCode())
 	}
 
-	var results []discussion.Discussion
-	for _, p := range posts {
-		d := p.toDiscussion()
+	fetched := lo.Map(posts, apifyPostToDiscussion)
+
+	return mergeWithExisting(fetched, existing), nil
+}
+
+func mergeWithExisting(fetched, existing []discussion.Discussion) []discussion.Discussion {
+	existingByURL := lo.KeyBy(existing, func(d discussion.Discussion) string { return d.URL })
+	merged := lo.Map(fetched, func(d discussion.Discussion, _ int) discussion.Discussion {
 		if prev, ok := existingByURL[d.URL]; ok {
 			d.Score = max(prev.Score, d.Score)
 		}
-		results = append(results, d)
-	}
-
-	return results, nil
+		return d
+	})
+	fetchedMap := lo.SliceToMap(fetched, func(d discussion.Discussion) (string, bool) { return d.URL, true })
+	existingOnly := lo.Filter(existing, func(d discussion.Discussion, _ int) bool { return !fetchedMap[d.URL] })
+	return slices.Concat(merged, existingOnly)
 }
 
 type requestBody struct {
@@ -134,7 +139,7 @@ type apifyPost struct {
 	UpVotes          int    `json:"upVotes"`
 }
 
-func (p apifyPost) toDiscussion() discussion.Discussion {
+func apifyPostToDiscussion(p apifyPost, _ int) discussion.Discussion {
 	blogRelURL := ""
 	if u, err := url.Parse(p.Link); err == nil {
 		blogRelURL = u.Path

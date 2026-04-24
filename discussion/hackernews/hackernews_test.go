@@ -21,20 +21,7 @@ func TestFetch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write(data)
-	}))
-	defer server.Close()
-
-	hn := HackerNews{restyClient: resty.New(), baseURL: server.URL}
-
-	got, err := hn.Fetch(context.Background(), "leonh.fr", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	want := []discussion.Discussion{
+	fetched := []discussion.Discussion{
 		{
 			Title:        "I shipped a transaction bug, so I built a linter",
 			URL:          "https://leonh.fr/posts/go-transaction-linter/",
@@ -46,7 +33,57 @@ func TestFetch(t *testing.T) {
 		},
 	}
 
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("got %+v, want %+v", got, want)
+	older := discussion.Discussion{
+		Title: "An older post",
+		URL:   "https://leonh.fr/posts/older/",
+		Forum: "hackernews",
+		Score: 10,
+	}
+
+	tests := []struct {
+		name     string
+		existing []discussion.Discussion
+		want     []discussion.Discussion
+	}{
+		{
+			name:     "no existing",
+			existing: nil,
+			want:     fetched,
+		},
+		{
+			name:     "existing preserved when not refetched",
+			existing: []discussion.Discussion{older},
+			want:     append(fetched, older),
+		},
+		{
+			name: "existing replaced when refetched",
+			existing: []discussion.Discussion{
+				{URL: "https://leonh.fr/posts/go-transaction-linter/", Forum: "hackernews", Score: 999},
+			},
+			want: fetched,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write(data)
+			}))
+			defer server.Close()
+
+			hn := HackerNews{restyClient: resty.New(), baseURL: server.URL}
+
+			got, err := hn.Fetch(context.Background(), "leonh.fr", tt.existing)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("got %+v, want %+v", got, tt.want)
+			}
+		})
 	}
 }

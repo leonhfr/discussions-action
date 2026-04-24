@@ -34,18 +34,8 @@ func newServer(t *testing.T, path string) *httptest.Server {
 func TestFetch(t *testing.T) {
 	t.Parallel()
 
-	server := newServer(t, "testdata/response.json")
-	defer server.Close()
-
-	r := Reddit{restyClient: resty.New(), baseURL: server.URL, apifyToken: "", logger: noopLogger{}}
-
-	got, err := r.Fetch(context.Background(), "leonh.fr", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	sub := "r/golang"
-	want := []discussion.Discussion{
+	fetched := []discussion.Discussion{
 		{
 			Title:        "I shipped a transaction bug, so I built a linter",
 			URL:          "https://www.reddit.com/r/golang/comments/1qp93bs/i_shipped_a_transaction_bug_so_i_built_a_linter/",
@@ -58,46 +48,64 @@ func TestFetch(t *testing.T) {
 		},
 	}
 
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("got %+v, want %+v", got, want)
+	older := discussion.Discussion{
+		URL:   "https://www.reddit.com/r/golang/comments/older/",
+		Forum: "reddit",
+		Score: 10,
 	}
-}
 
-func TestFetch_existingScorePreservedWhenHigher(t *testing.T) {
-	t.Parallel()
-
-	server := newServer(t, "testdata/response.json")
-	defer server.Close()
-
-	r := Reddit{restyClient: resty.New(), baseURL: server.URL, apifyToken: "", logger: noopLogger{}}
-
-	sub := "r/golang"
-	existing := []discussion.Discussion{
+	tests := []struct {
+		name     string
+		existing []discussion.Discussion
+		want     []discussion.Discussion
+	}{
 		{
-			URL:   "https://www.reddit.com/r/golang/comments/1qp93bs/i_shipped_a_transaction_bug_so_i_built_a_linter/",
-			Score: 100,
+			name:     "no existing",
+			existing: nil,
+			want:     fetched,
+		},
+		{
+			name:     "existing preserved when not refetched",
+			existing: []discussion.Discussion{older},
+			want:     append(fetched, older),
+		},
+		{
+			name: "existing score preserved when higher",
+			existing: []discussion.Discussion{
+				{URL: "https://www.reddit.com/r/golang/comments/1qp93bs/i_shipped_a_transaction_bug_so_i_built_a_linter/", Score: 100},
+			},
+			want: func() []discussion.Discussion {
+				d := fetched[0]
+				d.Score = 100
+				return []discussion.Discussion{d}
+			}(),
+		},
+		{
+			name: "fetched score used when higher than existing",
+			existing: []discussion.Discussion{
+				{URL: "https://www.reddit.com/r/golang/comments/1qp93bs/i_shipped_a_transaction_bug_so_i_built_a_linter/", Score: 1},
+			},
+			want: fetched,
 		},
 	}
 
-	got, err := r.Fetch(context.Background(), "leonh.fr", existing)
-	if err != nil {
-		t.Fatal(err)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
-	want := []discussion.Discussion{
-		{
-			Title:        "I shipped a transaction bug, so I built a linter",
-			URL:          "https://www.reddit.com/r/golang/comments/1qp93bs/i_shipped_a_transaction_bug_so_i_built_a_linter/",
-			BlogRelURL:   "/posts/go-transaction-linter/",
-			Forum:        "reddit",
-			SubForum:     &sub,
-			Timestamp:    1769600519,
-			CommentCount: 12,
-			Score:        100,
-		},
-	}
+			server := newServer(t, "testdata/response.json")
+			defer server.Close()
 
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("got %+v, want %+v", got, want)
+			r := Reddit{restyClient: resty.New(), baseURL: server.URL, apifyToken: "", logger: noopLogger{}}
+
+			got, err := r.Fetch(context.Background(), "leonh.fr", tt.existing)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("got %+v, want %+v", got, tt.want)
+			}
+		})
 	}
 }
