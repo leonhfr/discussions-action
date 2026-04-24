@@ -1,0 +1,4 @@
+466e63ec52c397911948be7e79314fa69ea8aae3ce96c4066b1e26579225d6b9  discussions-action_0.0.1_darwin_amd64.tar.gz
+4b4da7c738f7e29862a58393c6695e98af1fc59bd64f085024ae2196c353b5c4  discussions-action_0.0.1_darwin_arm64.tar.gz
+8829fa721539dca67414fbcc79f326a0da64d0bad7f896b838e96b92550bc7c1  discussions-action_0.0.1_linux_amd64.tar.gz
+042f784166a4507a66297099daf9c41cb3c73d9986de48456c21ad1e44b3c2cb  discussions-action_0.0.1_linux_arm64.tar.gz

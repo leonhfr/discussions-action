@@ -1,0 +1,21 @@
+name: Discussions
+author: leonhfr
+description: Searches for links to a domain name in selected websites (e.g. Hacker News) and generate a report.
+
+inputs:
+  domain_name:
+    description: domain name to search for
+    required: true
+  apify_token:
+    description: Apify token
+    required: true
+  target_dir:
+    description: directory to target
+
+runs:
+  using: node20
+  main: action.js
+
+branding:
+  icon: link
+  color: blue
