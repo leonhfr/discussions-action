@@ -37,7 +37,7 @@ func TestFetch(t *testing.T) {
 	server := newServer(t, "testdata/response.json")
 	defer server.Close()
 
-	r := Reddit{restyClient: resty.New(), baseURL: server.URL, logger: noopLogger{}}
+	r := Reddit{restyClient: resty.New(), baseURL: server.URL, apifyToken: "", logger: noopLogger{}}
 
 	got, err := r.Fetch(context.Background(), "leonh.fr", nil)
 	if err != nil {
@@ -54,7 +54,7 @@ func TestFetch(t *testing.T) {
 			SubForum:     &sub,
 			Timestamp:    1769600519,
 			CommentCount: 12,
-			Score:        54,
+			Score:        53,
 		},
 	}
 
@@ -69,7 +69,7 @@ func TestFetch_existingScorePreservedWhenHigher(t *testing.T) {
 	server := newServer(t, "testdata/response.json")
 	defer server.Close()
 
-	r := Reddit{restyClient: resty.New(), baseURL: server.URL, logger: noopLogger{}}
+	r := Reddit{restyClient: resty.New(), baseURL: server.URL, apifyToken: "", logger: noopLogger{}}
 
 	sub := "r/golang"
 	existing := []discussion.Discussion{

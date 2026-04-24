@@ -6,6 +6,9 @@ inputs:
   domain_name:
     description: domain name to search for
     required: true
+  apify_token:
+    description: Apify token
+    required: true
   target_dir:
     description: directory to target
 

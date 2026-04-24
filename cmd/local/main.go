@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	domainName = "leonh.fr"
-	targetDir  = "dist"
+	domainName    = "leonh.fr"
+	targetDir     = "dist"
+	apifyTokenEnv = "APIFY_TOKEN"
 )
 
 func main() {
@@ -23,7 +24,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := action.Generate(ctx, fmtLogger{}, domainName, targetDir); err != nil {
+	config := action.Config{
+		DomainName: domainName,
+		TargetDir:  targetDir,
+		ApifyToken: os.Getenv(apifyTokenEnv),
+	}
+
+	if err := action.Generate(ctx, config, fmtLogger{}); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}

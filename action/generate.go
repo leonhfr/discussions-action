@@ -17,13 +17,19 @@ import (
 	"github.com/leonhfr/discussions-action/discussion/reddit"
 )
 
+type Config struct {
+	DomainName string
+	TargetDir  string
+	ApifyToken string
+}
+
 type Logger interface {
 	Debugf(format string, args ...any)
 	Errorf(format string, args ...any)
 	Infof(format string, args ...any)
 }
 
-func Generate(ctx context.Context, logger Logger, domainName, targetDir string) error {
+func Generate(ctx context.Context, config Config, logger Logger) error {
 	limiter := rate.NewLimiter(rate.Every(time.Second), 10)
 
 	restyClient := resty.
@@ -34,10 +40,10 @@ func Generate(ctx context.Context, logger Logger, domainName, targetDir string) 
 
 	fetchers := []discussion.Fetcher{
 		hackernews.New(restyClient),
-		reddit.New(restyClient, logger),
+		reddit.New(restyClient, logger, config.ApifyToken),
 	}
 
-	target := filepath.Join(targetDir, "discussions.toml")
+	target := filepath.Join(config.TargetDir, "discussions.toml")
 
 	existingDiscussions, err := readOutput(target)
 	if err != nil {
@@ -48,7 +54,7 @@ func Generate(ctx context.Context, logger Logger, domainName, targetDir string) 
 	var fetchedDiscussions []discussion.Discussion
 	for _, fetcher := range fetchers {
 		logger.Infof("fetching discussions from %s", fetcher.String())
-		fetched, err := fetcher.Fetch(ctx, domainName, existingDiscussions)
+		fetched, err := fetcher.Fetch(ctx, config.DomainName, existingDiscussions)
 		if err != nil {
 			logger.Errorf("failed to fetch from %s: %s", fetcher.String(), err)
 			return err

@@ -26,6 +26,7 @@ func main() {
 const (
 	domainNameInput = "domain_name"
 	targetDirInput  = "target_dir"
+	apifyTokenInput = "apify_token"
 )
 
 func run(ctx context.Context, gha *githubactions.Action) error {
@@ -39,8 +40,19 @@ func run(ctx context.Context, gha *githubactions.Action) error {
 		return fmt.Errorf("%s required", domainNameInput)
 	}
 
+	apifyToken := gha.GetInput(apifyTokenInput)
+	if apifyToken == "" {
+		return fmt.Errorf("%s required", apifyTokenInput)
+	}
+
 	targetDir := gha.GetInput(targetDirInput)
 	targetDir = filepath.Join(ghc.Workspace, targetDir)
 
-	return action.Generate(ctx, gha, domainName, targetDir)
+	config := action.Config{
+		DomainName: domainName,
+		TargetDir:  targetDir,
+		ApifyToken: apifyToken,
+	}
+
+	return action.Generate(ctx, config, gha)
 }
