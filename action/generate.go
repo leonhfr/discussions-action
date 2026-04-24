@@ -54,12 +54,14 @@ func Generate(ctx context.Context, config Config, logger Logger) error {
 	var fetchedDiscussions []discussion.Discussion
 	for _, fetcher := range fetchers {
 		logger.Infof("fetching discussions from %s", fetcher.String())
-		fetched, err := fetcher.Fetch(ctx, config.DomainName, existingDiscussions)
+		forum := fetcher.String()
+		existing := discussion.FilterByForum(existingDiscussions, forum)
+		fetched, err := fetcher.Fetch(ctx, config.DomainName, existing)
 		if err != nil {
-			logger.Errorf("failed to fetch from %s: %s", fetcher.String(), err)
+			logger.Errorf("failed to fetch from %s: %s", forum, err)
 			return err
 		}
-		logger.Infof("fetched %d discussions from %s", len(fetched), fetcher.String())
+		logger.Infof("fetched %d discussions from %s", len(fetched), forum)
 
 		fetchedDiscussions = slices.Concat(fetchedDiscussions, fetched)
 	}

@@ -1,10 +1,18 @@
 package discussion
 
-import "context"
+import (
+	"context"
+
+	"github.com/samber/lo"
+)
 
 type Fetcher interface {
 	String() string
 	Fetch(ctx context.Context, domainName string, existing []Discussion) ([]Discussion, error)
+}
+
+func FilterByForum(discussions []Discussion, forum string) []Discussion {
+	return lo.Filter(discussions, func(d Discussion, _ int) bool { return d.Forum == forum })
 }
 
 type Discussion struct {

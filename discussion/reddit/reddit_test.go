@@ -73,14 +73,14 @@ func TestFetch(t *testing.T) {
 		{
 			name: "existing score preserved when higher",
 			existing: []discussion.Discussion{
-				{URL: linter.URL, Score: 100},
+				{URL: linter.URL, Forum: "reddit", Score: 100},
 			},
 			want: []discussion.Discussion{linterHighScore},
 		},
 		{
 			name: "fetched score used when higher than existing",
 			existing: []discussion.Discussion{
-				{URL: linter.URL, Score: 1},
+				{URL: linter.URL, Forum: "reddit", Score: 1},
 			},
 			want: []discussion.Discussion{linter},
 		},
