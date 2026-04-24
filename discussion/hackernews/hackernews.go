@@ -2,6 +2,7 @@ package hackernews
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"slices"
 	"strconv"
@@ -72,6 +73,7 @@ type response struct {
 type hit struct {
 	Title            string `json:"title"`
 	URL              string `json:"url"`
+	StoryID          int    `json:"story_id"`
 	Points           int    `json:"points"`
 	NumberOfComments int    `json:"num_comments"`
 	CreatedAt        int    `json:"created_at_i"`
@@ -84,7 +86,7 @@ func hitToDiscussion(h hit, _ int) discussion.Discussion {
 	}
 	return discussion.Discussion{
 		Title:        h.Title,
-		URL:          h.URL,
+		URL:          fmt.Sprintf("https://news.ycombinator.com/item?id=%d", h.StoryID),
 		BlogRelURL:   blogRelURL,
 		Forum:        site,
 		Timestamp:    h.CreatedAt,

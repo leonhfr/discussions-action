@@ -23,7 +23,7 @@ func TestFetch(t *testing.T) {
 
 	linter := discussion.Discussion{
 		Title:        "I shipped a transaction bug, so I built a linter",
-		URL:          "https://leonh.fr/posts/go-transaction-linter/",
+		URL:          "https://news.ycombinator.com/item?id=47715389",
 		BlogRelURL:   "/posts/go-transaction-linter/",
 		Forum:        "hackernews",
 		Timestamp:    1775811665,
@@ -56,7 +56,7 @@ func TestFetch(t *testing.T) {
 		{
 			name: "existing replaced when refetched",
 			existing: []discussion.Discussion{
-				{URL: "https://leonh.fr/posts/go-transaction-linter/", Forum: "hackernews", Score: 999},
+				{URL: "https://news.ycombinator.com/item?id=47715389", Forum: "hackernews", Score: 999},
 			},
 			want: []discussion.Discussion{linter},
 		},
