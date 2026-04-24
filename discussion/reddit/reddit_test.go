@@ -35,18 +35,19 @@ func TestFetch(t *testing.T) {
 	t.Parallel()
 
 	sub := "r/golang"
-	fetched := []discussion.Discussion{
-		{
-			Title:        "I shipped a transaction bug, so I built a linter",
-			URL:          "https://www.reddit.com/r/golang/comments/1qp93bs/i_shipped_a_transaction_bug_so_i_built_a_linter/",
-			BlogRelURL:   "/posts/go-transaction-linter/",
-			Forum:        "reddit",
-			SubForum:     &sub,
-			Timestamp:    1769600519,
-			CommentCount: 12,
-			Score:        53,
-		},
+	linter := discussion.Discussion{
+		Title:        "I shipped a transaction bug, so I built a linter",
+		URL:          "https://www.reddit.com/r/golang/comments/1qp93bs/i_shipped_a_transaction_bug_so_i_built_a_linter/",
+		BlogRelURL:   "/posts/go-transaction-linter/",
+		Forum:        "reddit",
+		SubForum:     &sub,
+		Timestamp:    1769600519,
+		CommentCount: 12,
+		Score:        53,
 	}
+
+	linterHighScore := linter
+	linterHighScore.Score = 100
 
 	older := discussion.Discussion{
 		URL:   "https://www.reddit.com/r/golang/comments/older/",
@@ -62,30 +63,26 @@ func TestFetch(t *testing.T) {
 		{
 			name:     "no existing",
 			existing: nil,
-			want:     fetched,
+			want:     []discussion.Discussion{linter},
 		},
 		{
 			name:     "existing preserved when not refetched",
 			existing: []discussion.Discussion{older},
-			want:     append(fetched, older),
+			want:     []discussion.Discussion{linter, older},
 		},
 		{
 			name: "existing score preserved when higher",
 			existing: []discussion.Discussion{
-				{URL: "https://www.reddit.com/r/golang/comments/1qp93bs/i_shipped_a_transaction_bug_so_i_built_a_linter/", Score: 100},
+				{URL: linter.URL, Score: 100},
 			},
-			want: func() []discussion.Discussion {
-				d := fetched[0]
-				d.Score = 100
-				return []discussion.Discussion{d}
-			}(),
+			want: []discussion.Discussion{linterHighScore},
 		},
 		{
 			name: "fetched score used when higher than existing",
 			existing: []discussion.Discussion{
-				{URL: "https://www.reddit.com/r/golang/comments/1qp93bs/i_shipped_a_transaction_bug_so_i_built_a_linter/", Score: 1},
+				{URL: linter.URL, Score: 1},
 			},
-			want: fetched,
+			want: []discussion.Discussion{linter},
 		},
 	}
 

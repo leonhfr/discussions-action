@@ -21,16 +21,14 @@ func TestFetch(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fetched := []discussion.Discussion{
-		{
-			Title:        "I shipped a transaction bug, so I built a linter",
-			URL:          "https://leonh.fr/posts/go-transaction-linter/",
-			BlogRelURL:   "/posts/go-transaction-linter/",
-			Forum:        "hackernews",
-			Timestamp:    1775811665,
-			CommentCount: 12,
-			Score:        53,
-		},
+	linter := discussion.Discussion{
+		Title:        "I shipped a transaction bug, so I built a linter",
+		URL:          "https://leonh.fr/posts/go-transaction-linter/",
+		BlogRelURL:   "/posts/go-transaction-linter/",
+		Forum:        "hackernews",
+		Timestamp:    1775811665,
+		CommentCount: 12,
+		Score:        53,
 	}
 
 	older := discussion.Discussion{
@@ -48,19 +46,19 @@ func TestFetch(t *testing.T) {
 		{
 			name:     "no existing",
 			existing: nil,
-			want:     fetched,
+			want:     []discussion.Discussion{linter},
 		},
 		{
 			name:     "existing preserved when not refetched",
 			existing: []discussion.Discussion{older},
-			want:     append(fetched, older),
+			want:     []discussion.Discussion{linter, older},
 		},
 		{
 			name: "existing replaced when refetched",
 			existing: []discussion.Discussion{
 				{URL: "https://leonh.fr/posts/go-transaction-linter/", Forum: "hackernews", Score: 999},
 			},
-			want: fetched,
+			want: []discussion.Discussion{linter},
 		},
 	}
 
